@@ -10,12 +10,11 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/dbConnection");
 const configurePassport = require("./config/passport");
 const homeRoutes = require("./routes/home");
-const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const donorRoutes = require("./routes/donor");
 const agentRoutes = require("./routes/agent");
 
-dotenv.config({ path: path.join(__dirname, "..", ".env") });
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 const port = Number(process.env.PORT) || 5001;
