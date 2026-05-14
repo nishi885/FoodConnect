@@ -82,19 +82,6 @@ The current codebase does not yet include OTP-based password recovery or a fully
   - compute shortest path for agent pickup locations
   - show route planner in the agent dashboard
 
-## How to extend
 
-To add the password reset feature:
-- create a `forgot password` route and view in `backend/routes/auth.js`
-- generate a one-time token or OTP
-- send it to the user via email or SMS
-- verify token and allow the user to set a new password
-
-To add shortest-route planning:
-- use real pickup addresses stored with donations
-- call a mapping API to compute optimized routes
-- show the route on the agent planner view at `/agent/profile/google-maps`
-
----
 
 Built for quick demo use and easy future enhancement.
