@@ -1,36 +1,52 @@
 <main>
-	<%- include('../partials/donorSidebar') %>
-	
-	<div id="main-wrapper">
-		
-		<div class="bg-white shadow-sm p-3">
-			<span class="me-3" id="sidebar-toggler-btn"><i class="fas fa-bars"></i></span>
-			<h5 class="m-0 color-theme d-inline-block">Dashboard</h5>
-		</div>
-		
-		<div class="d-flex gap-3 flex-wrap m-4 text-white">
-			
-			<div class="bg-success rounded p-3" style="width: 100%;">
-				<div class="fs-1"><%= numCollectedDonations %></div>
-				<div class="fs-5">donations by you</div>
-			</div>
-			
-			<div class="bg-primary rounded p-3" style="width: 250px;">
-				<div class="fs-1"><%= numPendingDonations %></div>
-				<div class="fs-5">donation requests not processed yet</div>
-			</div>
-			
-			<div class="bg-success rounded p-3" style="width: 250px;">
-				<div class="fs-1"><%= numAcceptedDonations %></div>
-				<div class="fs-5">donations accepted and to be assigned to agent</div>
-			</div>
-			
-			<div class="bg-danger rounded p-3" style="width: 250px;">
-				<div class="fs-1"><%= numAssignedDonations %></div>
-				<div class="fs-5">donations not collected yet</div>
-			</div>
-			
-		</div>
-		
-	</div>
+<%- include('../partials/donorSidebar') %>
+
+<div id="main-wrapper">
+
+<div class="bg-white shadow-sm p-3">
+<span class="me-3" id="sidebar-toggler-btn"><i class="fas fa-bars"></i></span>
+<h5 class="m-0 color-theme d-inline-block">Dashboard</h5>
+</div>
+
+<div class="m-4">
+<div class="dashboard-hero">
+<h2>Welcome, <%= currentUser.firstName %></h2>
+<p>See your donation status at a glance and keep track of every request.</p>
+</div>
+</div>
+
+<div class="m-4 dashboard-grid">
+<div class="dashboard-card">
+<div class="card-title">Your donations</div>
+<div class="card-value"><%= numCollectedDonations %></div>
+<div class="card-note">Successful donations completed so far.</div>
+<i class="fas fa-heart card-icon"></i>
+</div>
+<div class="dashboard-card">
+<div class="card-title">Pending review</div>
+<div class="card-value"><%= numPendingDonations %></div>
+<div class="card-note">Donations waiting for admin approval.</div>
+<i class="fas fa-clock card-icon"></i>
+</div>
+<div class="dashboard-card">
+<div class="card-title">Accepted donations</div>
+<div class="card-value"><%= numAcceptedDonations %></div>
+<div class="card-note">Donations approved and ready for pickup.</div>
+<i class="fas fa-thumbs-up card-icon"></i>
+</div>
+<div class="dashboard-card">
+<div class="card-title">Assigned pickups</div>
+<div class="card-value"><%= numAssignedDonations %></div>
+<div class="card-note">Donations assigned to an agent for collection.</div>
+<i class="fas fa-route card-icon"></i>
+</div>
+</div>
+
+<div class="m-4 dashboard-actions">
+<a href="/donor/donate" class="dashboard-action">Give new donation</a>
+<a href="/donor/donations/pending" class="dashboard-action">Track pending donations</a>
+<a href="/donor/donations/previous" class="dashboard-action">Donation history</a>
+</div>
+
+</div>
 </main>
