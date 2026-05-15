@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/user.js");
+const Donation = require("../models/donation.js");
 const { sendOtpEmail } = require("../config/mail.js");
 const passport = require("passport");
 const middleware = require("../middleware/index.js")
@@ -217,7 +218,7 @@ router.post('/auth/verify', middleware.ensureNotLoggedIn, async (req, res) => {
 			return res.redirect('/auth/login');
 		}
 
-		const newUser = new User({
+        const newUser = new User({
 			firstName: pendingSignup.firstName,
 			lastName: pendingSignup.lastName,
 			email: pendingSignup.email,
@@ -227,9 +228,20 @@ router.post('/auth/verify', middleware.ensureNotLoggedIn, async (req, res) => {
 		});
 
 		await newUser.save();
+
+		// remove pending signup from session
 		delete req.session.pendingSignup;
-		req.flash('success', 'Email verified. You can now log in.');
-		return res.redirect('/auth/login');
+
+		// automatically log the user in after verification
+		req.login(newUser, function(err) {
+			if (err) {
+				console.error('Login after verify failed:', err);
+				req.flash('success', 'Email verified. Please log in.');
+				return res.redirect('/auth/login');
+			}
+			req.flash('success', 'Email verified and logged in successfully.');
+			return res.redirect(req.session.returnTo || `/${newUser.role}/dashboard`);
+		});
 	} catch (err) {
 		console.error('Error verifying OTP', err);
 		req.flash('error', 'Server error verifying OTP');
@@ -280,6 +292,35 @@ router.get("/auth/logout", (req, res, next) => {
 		req.flash("success", "Logged out successfully from FoodBridge");
 		res.redirect("/");
 	});
+});
+
+
+// Allow any logged-in user to unregister (delete) their own account
+router.post('/auth/unregister', middleware.ensureLoggedIn, async (req, res, next) => {
+	try {
+		const userId = req.user._id;
+		const role = req.user.role;
+
+		if (role === 'agent') {
+			await Donation.updateMany({ agent: userId, status: 'assigned' }, { $set: { agent: null, status: 'accepted' } });
+		}
+
+		if (role === 'donor') {
+			await Donation.deleteMany({ donor: userId });
+		}
+
+		await User.findByIdAndDelete(userId);
+
+		req.logout(function(err) {
+			if (err) return next(err);
+			req.flash('success', 'Your account has been unregistered successfully.');
+			return res.redirect('/');
+		});
+	} catch (err) {
+		console.error('Error unregistering user:', err);
+		req.flash('error', 'Could not unregister account.');
+		return res.redirect('back');
+	}
 });
 
 
