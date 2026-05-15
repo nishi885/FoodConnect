@@ -2,8 +2,18 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/user.js");
+const { sendOtpEmail } = require("../config/mail.js");
 const passport = require("passport");
 const middleware = require("../middleware/index.js")
+
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// Password reset helpers
+const passwordValid = (p) => {
+	const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])[A-Za-z0-9@]{4,}$/;
+	const allowedSpecial = /^[A-Za-z0-9@]*$/;
+	return passwordRegex.test(p) && allowedSpecial.test(p);
+}
 
 
 
@@ -50,14 +60,35 @@ router.post("/auth/signup", middleware.ensureNotLoggedIn, async (req, res) => {
 				firstName, lastName, errors, email, password1, password2
 			});
 		}
-		const newUser = new User({ firstName, lastName, email, password: password1, role });
+
+		const otp = generateOtp();
+		const otpExpires = Date.now() + 10 * 60 * 1000;
 		const salt = bcrypt.genSaltSync(10);
-		const hash = bcrypt.hashSync(newUser.password, salt);
-		newUser.password = hash;
-		await newUser.save();
-		console.log("Signup success: User registered", newUser.email);
-		req.flash("success", "You are successfully registered and can log in.");
-		res.redirect("/auth/login");
+		const hash = bcrypt.hashSync(password1, salt);
+
+		// keep signup pending in session until OTP is verified
+		req.session.pendingSignup = {
+			firstName,
+			lastName,
+			email,
+			password: hash,
+			role,
+			otp,
+			otpExpires
+		};
+
+		const sent = await sendOtpEmail(email, otp);
+		if (!sent) {
+			delete req.session.pendingSignup;
+			req.flash('error', 'Could not send verification email. Please try again.');
+			return res.render("auth/signup", {
+				title: "User Signup",
+				firstName, lastName, email, password1, password2
+			});
+		}
+
+		req.flash('success', 'OTP sent to your email. Please verify to complete signup.');
+		return res.redirect('/auth/verify');
 	} catch (err) {
 		console.log("Signup server error:", err);
 		req.flash("error", "Some error occurred on the server.");
@@ -68,6 +99,168 @@ router.post("/auth/signup", middleware.ensureNotLoggedIn, async (req, res) => {
 
 router.get("/auth/login", middleware.ensureNotLoggedIn, (req,res) => {
 	res.render("auth/login", { title: "User login" });
+});
+
+
+// Forgot password: request OTP
+router.get('/auth/forgot', middleware.ensureNotLoggedIn, (req, res) => {
+	res.render('auth/forgot', { title: 'Forgot Password' });
+});
+
+router.post('/auth/forgot', middleware.ensureNotLoggedIn, async (req, res) => {
+	const { email } = req.body;
+	try {
+		const user = await User.findOne({ email });
+		if (!user) {
+			req.flash('error', 'No account found with that email');
+			return res.redirect('/auth/forgot');
+		}
+		const otp = generateOtp();
+		user.resetOtp = otp;
+		user.resetOtpExpires = Date.now() + 10 * 60 * 1000;
+		await user.save();
+		const { sendEmail } = require('../config/mail');
+		const sent = await sendEmail(email, 'Password reset code', `Your password reset code is: ${otp}`, `<p>Your password reset code is: <strong>${otp}</strong></p><p>It is valid for 10 minutes.</p>`);
+		if (!sent) {
+			req.flash('error', 'Could not send reset email. Please try again later.');
+			return res.redirect('/auth/forgot');
+		}
+		req.flash('info', 'Password reset code sent to your email.');
+		return res.redirect(`/auth/reset?email=${encodeURIComponent(email)}`);
+	} catch (err) {
+		console.error('Error in forgot password:', err);
+		req.flash('error', 'Server error');
+		return res.redirect('/auth/forgot');
+	}
+});
+
+// Reset password: verify OTP + set new password
+router.get('/auth/reset', middleware.ensureNotLoggedIn, (req, res) => {
+	const email = req.query.email || '';
+	res.render('auth/reset', { title: 'Reset Password', email });
+});
+
+router.post('/auth/reset', middleware.ensureNotLoggedIn, async (req, res) => {
+	const { email, otp, password1, password2 } = req.body;
+	let errors = [];
+	if (!email || !otp || !password1 || !password2) {
+		errors.push({ msg: 'Please fill in all fields' });
+	}
+	if (password1 !== password2) errors.push({ msg: 'Passwords do not match' });
+	if (!passwordValid(password1)) errors.push({ msg: 'Password must contain at least one uppercase, one lowercase letter, only @ as special character, and be at least 4 characters.'});
+	if (errors.length > 0) {
+		return res.render('auth/reset', { title: 'Reset Password', email, errors });
+	}
+	try {
+		const user = await User.findOne({ email });
+		if (!user) {
+			req.flash('error', 'No account found');
+			return res.redirect('/auth/forgot');
+		}
+		if (!user.resetOtp || !user.resetOtpExpires || Date.now() > user.resetOtpExpires) {
+			req.flash('error', 'Reset code expired. Please request a new code.');
+			return res.redirect('/auth/forgot');
+		}
+		if (user.resetOtp !== String(otp).trim()) {
+			req.flash('error', 'Invalid reset code');
+			return res.redirect(`/auth/reset?email=${encodeURIComponent(email)}`);
+		}
+		const salt = bcrypt.genSaltSync(10);
+		const hash = bcrypt.hashSync(password1, salt);
+		user.password = hash;
+		user.resetOtp = undefined;
+		user.resetOtpExpires = undefined;
+		await user.save();
+		req.flash('success', 'Password updated. You can now log in.');
+		return res.redirect('/auth/login');
+	} catch (err) {
+		console.error('Error resetting password:', err);
+		req.flash('error', 'Server error');
+		return res.redirect('/auth/forgot');
+	}
+});
+
+
+// Verify OTP routes
+router.get('/auth/verify', middleware.ensureNotLoggedIn, (req, res) => {
+	if (!req.session.pendingSignup) {
+		req.flash('warning', 'Please sign up first to verify your email.');
+		return res.redirect('/auth/signup');
+	}
+	const email = req.session.pendingSignup.email;
+	res.render('auth/verify', { title: 'Verify Account', email });
+});
+
+router.post('/auth/verify', middleware.ensureNotLoggedIn, async (req, res) => {
+	const { otp } = req.body;
+	try {
+		const pendingSignup = req.session.pendingSignup;
+		if (!pendingSignup) {
+			req.flash('warning', 'Signup session expired. Please sign up again.');
+			return res.redirect('/auth/signup');
+		}
+
+		if (!pendingSignup.otp || !pendingSignup.otpExpires || Date.now() > pendingSignup.otpExpires) {
+			req.flash('error', 'OTP expired. Please resend OTP.');
+			return res.redirect('/auth/verify');
+		}
+
+		if (pendingSignup.otp !== String(otp).trim()) {
+			req.flash('error', 'Invalid OTP.');
+			return res.redirect('/auth/verify');
+		}
+
+		const existingUser = await User.findOne({ email: pendingSignup.email });
+		if (existingUser) {
+			delete req.session.pendingSignup;
+			req.flash('error', 'This email is already registered. Please log in.');
+			return res.redirect('/auth/login');
+		}
+
+		const newUser = new User({
+			firstName: pendingSignup.firstName,
+			lastName: pendingSignup.lastName,
+			email: pendingSignup.email,
+			password: pendingSignup.password,
+			role: pendingSignup.role,
+			isVerified: true
+		});
+
+		await newUser.save();
+		delete req.session.pendingSignup;
+		req.flash('success', 'Email verified. You can now log in.');
+		return res.redirect('/auth/login');
+	} catch (err) {
+		console.error('Error verifying OTP', err);
+		req.flash('error', 'Server error verifying OTP');
+		return res.redirect('/auth/signup');
+	}
+});
+
+router.post('/auth/resend-otp', middleware.ensureNotLoggedIn, async (req, res) => {
+	try {
+		const pendingSignup = req.session.pendingSignup;
+		if (!pendingSignup) {
+			req.flash('warning', 'Signup session expired. Please sign up again.');
+			return res.redirect('/auth/signup');
+		}
+		const otp = generateOtp();
+		pendingSignup.otp = otp;
+		pendingSignup.otpExpires = Date.now() + 10 * 60 * 1000;
+		req.session.pendingSignup = pendingSignup;
+
+		const sent = await sendOtpEmail(pendingSignup.email, otp);
+		if (!sent) {
+			req.flash('error', 'Could not send OTP email.');
+			return res.redirect('/auth/verify');
+		}
+		req.flash('success', 'A new verification code has been sent to your email.');
+		return res.redirect('/auth/verify');
+	} catch (err) {
+		console.error('Error resending OTP', err);
+		req.flash('error', 'Server error resending OTP');
+		return res.redirect('/auth/signup');
+	}
 });
 
 router.post("/auth/login", middleware.ensureNotLoggedIn,
