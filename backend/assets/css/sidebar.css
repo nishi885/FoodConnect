@@ -10,15 +10,18 @@ main
 	flex-grow: 1;
 	height: 100%;
 	overflow-y: auto;
+	background: #f7fbfb;
 }
 
 #sidebar
 {
 	height: 100%;
-	width: 228px;	flex-shrink: 0;
-	background-color: #2c3e50;
+	width: 238px;
+	flex-shrink: 0;
+	background: #152935;
 	overflow-y: auto;
-	transition: 0.15s linear;
+	transition: width 0.2s ease;
+	box-shadow: 4px 0 18px rgba(0, 0, 0, 0.08);
 }
 
 #sidebar-toggler-btn
@@ -39,31 +42,34 @@ main
 
 #sidebar ul li
 {
-	color: white;
-	font-size: 18px;
+	color: #d8e3ea;
+	font-size: 16px;
 }
 
 #sidebar ul li:first-child, #sidebar ul li:last-child
 {
 	text-align: center;
-	margin: 5px;
+	margin: 8px;
 }
 
 #sidebar ul li a:not(.btn)
 {
 	text-decoration: none;
-	color: #c5bec9;
+	color: #d8e3ea;
 	display: inline-block;
 	width: 100%;
-	padding: 10px 15px;
+	padding: 12px 18px;
+	border-radius: 0 24px 24px 0;
+	transition: background 0.2s ease, color 0.2s ease;
 }
 #sidebar ul li a.active
 {
 	color: white;
-	background-color: #595963;
+	background-color: rgba(42, 157, 143, 0.18);
 	border-left: 4px solid var(--theme-color);
 }
 #sidebar ul li a:not(.btn):hover
 {
-	background-color: #656570;
+	background-color: rgba(255, 255, 255, 0.08);
+	color: white;
 }
