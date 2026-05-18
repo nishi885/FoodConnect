@@ -1,51 +1,70 @@
 <main>
-	<%- include('../partials/adminSidebar') %>
-	
-	<div id="main-wrapper">
-		
-		<div class="bg-white shadow-sm p-3">
-			<span class="me-3" id="sidebar-toggler-btn"><i class="fas fa-bars"></i></span>
-			<h5 class="m-0 color-theme d-inline-block">Dashboard</h5>
-		</div>
-		
-		<div class="d-flex gap-3 flex-wrap m-4 text-white">
-			
-			<div class="bg-primary rounded p-3" style="width: 250px;">
-				<div class="fs-1"><%= numAdmins %></div>
-				<div class="fs-5">admins</div>
-			</div>
-			
-			<div class="bg-success rounded p-3" style="width: 250px;">
-				<div class="fs-1"><%= numDonors %></div>
-				<div class="fs-5">donors</div>
-			</div>
-			
-			<div class="bg-primary rounded p-3" style="width: 250px;">
-				<div class="fs-1"><%= numAgents %></div>
-				<div class="fs-5">agents</div>
-			</div>
-			
-			<div class="bg-success rounded p-3" style="width: 250px;">
-				<div class="fs-1"><%= numPendingDonations %></div>
-				<div class="fs-5">new donation requests</div>
-			</div>
-			
-			<div class="bg-warning rounded p-3" style="width: 250px;">
-				<div class="fs-1"><%= numAcceptedDonations %></div>
-				<div class="fs-5">donations to be assigned to agent</div>
-			</div>
-			
-			<div class="bg-danger rounded p-3" style="width: 250px;">
-				<div class="fs-1"><%= numAssignedDonations %></div>
-				<div class="fs-5">donations not collected yet</div>
-			</div>
-			
-			<div class="bg-success rounded p-3" style="width: 250px;">
-				<div class="fs-1"><%= numCollectedDonations %></div>
-				<div class="fs-5">donations collected</div>
-			</div>
-			
-		</div>
-		
-	</div>
+<%- include('../partials/adminSidebar') %>
+
+<div id="main-wrapper">
+
+<div class="bg-white shadow-sm p-3">
+<span class="me-3" id="sidebar-toggler-btn"><i class="fas fa-bars"></i></span>
+<h5 class="m-0 color-theme d-inline-block">Dashboard</h5>
+</div>
+
+<div class="m-4">
+<div class="dashboard-hero">
+<h2>Welcome back, <%= currentUser.firstName %></h2>
+<p>Track donors, manage agents, and keep donation pickup moving with a clean, actionable dashboard.</p>
+</div>
+</div>
+
+<div class="m-4 dashboard-grid">
+<div class="dashboard-card">
+<div class="card-title">Admins</div>
+<div class="card-value"><%= numAdmins %></div>
+<div class="card-note">Total admin accounts managing the system.</div>
+<i class="fas fa-user-shield card-icon"></i>
+</div>
+<div class="dashboard-card">
+<div class="card-title">Donors</div>
+<div class="card-value"><%= numDonors %></div>
+<div class="card-note">Registered donors ready to contribute food.</div>
+<i class="fas fa-hands-helping card-icon"></i>
+</div>
+<div class="dashboard-card">
+<div class="card-title">Agents</div>
+<div class="card-value"><%= numAgents %></div>
+<div class="card-note">Active delivery agents on the ground.</div>
+<i class="fas fa-truck card-icon"></i>
+</div>
+<div class="dashboard-card">
+<div class="card-title">Pending donations</div>
+<div class="card-value"><%= numPendingDonations %></div>
+<div class="card-note">Donation requests awaiting approval.</div>
+<i class="fas fa-hourglass-half card-icon"></i>
+</div>
+<div class="dashboard-card">
+<div class="card-title">Accepted donations</div>
+<div class="card-value"><%= numAcceptedDonations %></div>
+<div class="card-note">Approved donations ready for assignment.</div>
+<i class="fas fa-check-circle card-icon"></i>
+</div>
+<div class="dashboard-card">
+<div class="card-title">Assigned pickups</div>
+<div class="card-value"><%= numAssignedDonations %></div>
+<div class="card-note">Donations assigned to agents but not yet collected.</div>
+<i class="fas fa-map-marker-alt card-icon"></i>
+</div>
+<div class="dashboard-card">
+<div class="card-title">Collected donations</div>
+<div class="card-value"><%= numCollectedDonations %></div>
+<div class="card-note">Confirmed donations successfully collected.</div>
+<i class="fas fa-hand-holding-heart card-icon"></i>
+</div>
+</div>
+
+<div class="m-4 dashboard-actions">
+<a href="/admin/donations/pending" class="dashboard-action">Review pending donations</a>
+<a href="/admin/agents" class="dashboard-action">Manage agents</a>
+<a href="/admin/donations/previous" class="dashboard-action">Donation history</a>
+</div>
+
+</div>
 </main>
