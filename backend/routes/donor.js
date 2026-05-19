@@ -3,6 +3,7 @@ const router = express.Router();
 const middleware = require("../middleware/index.js");
 const User = require("../models/user.js");
 const Donation = require("../models/donation.js");
+const Notification = require("../models/notification.js");
 
 
 router.get("/donor/dashboard", middleware.ensureDonorLoggedIn, async (req,res) => {
@@ -29,6 +30,15 @@ router.post("/donor/donate", middleware.ensureDonorLoggedIn, async (req,res) => 
 		donation.donor = req.user._id;
 		const newDonation = new Donation(donation);
 		await newDonation.save();
+		try {
+			await Notification.create({
+				message: `New donation added by ${req.user.firstName} ${req.user.lastName}`,
+				data: { donationId: newDonation._id, donorId: req.user._id },
+				recipients: ['admin']
+			});
+		} catch (notifErr) {
+			console.error('Could not create donation notification:', notifErr);
+		}
 		req.flash("success", "Donation request sent successfully");
 		res.redirect("/donor/donations/pending");
 	}

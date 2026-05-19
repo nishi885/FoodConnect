@@ -3,6 +3,7 @@ const router = express.Router();
 const middleware = require("../middleware/index.js");
 const User = require("../models/user.js");
 const Donation = require("../models/donation.js");
+const Notification = require("../models/notification.js");
 
 
 router.get("/admin/dashboard", middleware.ensureAdminLoggedIn, async (req,res) => {
@@ -66,7 +67,16 @@ router.get("/admin/donation/accept/:donationId", middleware.ensureAdminLoggedIn,
 	try
 	{
 		const donationId = req.params.donationId;
-		await Donation.findByIdAndUpdate(donationId, { status: "accepted" });
+		const donation = await Donation.findByIdAndUpdate(donationId, { status: "accepted" }, { new: true }).populate('donor');
+		try {
+			await Notification.create({
+				message: `Your donation was accepted by admin`,
+				data: { donationId, status: 'accepted' },
+				recipients: ['donor']
+			});
+		} catch (notifErr) {
+			console.error('Could not create accept notification:', notifErr);
+		}
 		req.flash("success", "Donation accepted successfully");
 		res.redirect(`/admin/donation/view/${donationId}`);
 	}
@@ -83,6 +93,15 @@ router.get("/admin/donation/reject/:donationId", middleware.ensureAdminLoggedIn,
 	{
 		const donationId = req.params.donationId;
 		await Donation.findByIdAndUpdate(donationId, { status: "rejected" });
+		try {
+			await Notification.create({
+				message: `Your donation was rejected by admin`,
+				data: { donationId, status: 'rejected' },
+				recipients: ['donor']
+			});
+		} catch (notifErr) {
+			console.error('Could not create reject notification:', notifErr);
+		}
 		req.flash("success", "Donation rejected successfully");
 		res.redirect(`/admin/donation/view/${donationId}`);
 	}
@@ -116,6 +135,15 @@ router.post("/admin/donation/assign/:donationId", middleware.ensureAdminLoggedIn
 		const donationId = req.params.donationId;
 		const {agent, adminToAgentMsg} = req.body;
 		await Donation.findByIdAndUpdate(donationId, { status: "assigned", agent, adminToAgentMsg });
+		try {
+			await Notification.create({
+				message: `A donation has been assigned to you`,
+				data: { donationId, agentId: agent, adminToAgentMsg },
+				recipients: ['agent']
+			});
+		} catch (notifErr) {
+			console.error('Could not create assign notification:', notifErr);
+		}
 		req.flash("success", "Agent assigned successfully");
 		res.redirect(`/admin/donation/view/${donationId}`);
 	}
