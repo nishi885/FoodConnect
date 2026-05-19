@@ -32,7 +32,15 @@ const userSchema = new mongoose.Schema({
 		type: String,
 		enum: ["admin", "donor", "agent"],
 		required: true
-	}
+	},
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    otp: String,
+    otpExpires: Date,
+    resetOtp: String,
+    resetOtpExpires: Date
 });
 
 const User = mongoose.model("users", userSchema);
