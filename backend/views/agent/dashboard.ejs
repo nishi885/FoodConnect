@@ -1,27 +1,40 @@
 <main>
-	<%- include('../partials/agentSidebar') %>
-	
-	<div id="main-wrapper">
-		
-		<div class="bg-white shadow-sm p-3">
-			<span class="me-3" id="sidebar-toggler-btn"><i class="fas fa-bars"></i></span>
-			<h5 class="m-0 color-theme d-inline-block">Dashboard</h5>
-		</div>
-		
-		<div class="d-flex gap-3 flex-wrap m-4 text-white">
-			
-			<div class="bg-primary rounded p-3" style="width: 300px;">
-				<div class="fs-1"><%= numAssignedDonations %></div>
-				<div class="fs-5">donations not collected yet</div>
-			</div>
-			
-			<div class="bg-success rounded p-3" style="width: 300px;">
-				<div class="fs-1"><%= numCollectedDonations %></div>
-				<div class="fs-5">donations collected by you</div>
-			</div>
-			
-		</div>
-		
-		
-	</div>
+<%- include('../partials/agentSidebar') %>
+
+<div id="main-wrapper">
+
+<div class="bg-white shadow-sm p-3">
+<span class="me-3" id="sidebar-toggler-btn"><i class="fas fa-bars"></i></span>
+<h5 class="m-0 color-theme d-inline-block">Dashboard</h5>
+</div>
+
+<div class="m-4">
+<div class="dashboard-hero">
+<h2>Hi, <%= currentUser.firstName %></h2>
+<p>Here is your active collection summary and quick access to route planning.</p>
+</div>
+</div>
+
+<div class="m-4 dashboard-grid">
+<div class="dashboard-card">
+<div class="card-title">Pending collections</div>
+<div class="card-value"><%= numAssignedDonations %></div>
+<div class="card-note">Donations assigned to you and waiting for pickup.</div>
+<i class="fas fa-box-open card-icon"></i>
+</div>
+<div class="dashboard-card">
+<div class="card-title">Collected donations</div>
+<div class="card-value"><%= numCollectedDonations %></div>
+<div class="card-note">Donations you have successfully collected.</div>
+<i class="fas fa-check-circle card-icon"></i>
+</div>
+</div>
+
+<div class="m-4 dashboard-actions">
+<a href="/agent/collections/pending" class="dashboard-action">View pending collections</a>
+<a href="/agent/collections/previous" class="dashboard-action">View previous collections</a>
+<a href="/agent/profile/google-maps" class="dashboard-action">Open route planner</a>
+</div>
+
+</div>
 </main>

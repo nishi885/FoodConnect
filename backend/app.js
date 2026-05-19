@@ -23,8 +23,9 @@ const homeRoutes = require("./routes/home");
 const adminRoutes = require("./routes/admin");
 const donorRoutes = require("./routes/donor");
 const agentRoutes = require("./routes/agent");
+const notificationsRoutes = require("./routes/notifications");
 
-dotenv.config({ path: path.join(__dirname, "..", ".env") });
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 const port = Number(process.env.PORT) || 5001;
@@ -67,6 +68,7 @@ app.use(authRoutes);
 app.use(adminRoutes);
 app.use(donorRoutes);
 app.use(agentRoutes);
+app.use(notificationsRoutes);
 
 app.use((req, res) => {
 	res.status(404).render("404page", { title: "Page Not Found" });

@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/user.js");
 const Donation = require("../models/donation.js");
+const Notification = require("../models/notification.js");
 const { sendOtpEmail } = require("../config/mail.js");
 const passport = require("passport");
 const middleware = require("../middleware/index.js")
@@ -228,6 +229,17 @@ router.post('/auth/verify', middleware.ensureNotLoggedIn, async (req, res) => {
 		});
 
 		await newUser.save();
+
+		// create an in-app notification for admins about the new user (non-blocking)
+		try {
+			await Notification.create({
+				message: `New user registered: ${newUser.firstName} ${newUser.lastName} (${newUser.role})`,
+				data: { userId: newUser._id, role: newUser.role },
+				recipients: ['admin']
+			});
+		} catch (notifErr) {
+			console.error('Could not create notification:', notifErr);
+		}
 
 		// remove pending signup from session
 		delete req.session.pendingSignup;
