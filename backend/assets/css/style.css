@@ -158,6 +158,17 @@ header .navbar-toggler .fas
 	to { right: 0px; }
 }
 
+/* Ensure notification dropdown and popups display above alerts and header elements */
+.dropdown-menu {
+	z-index: 2200 !important;
+}
+.notif-popup {
+	z-index: 3000 !important;
+}
+
+/* Make sure navbar dropdowns are not clipped */
+header .navbar { z-index: 1500; }
+
 .bg-img-1,
  .bg-img-1,
  .bg-img-2
