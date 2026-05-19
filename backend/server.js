@@ -55,6 +55,7 @@ app.use((req, res, next) => {
   res.locals.error = req.flash("error");
   res.locals.warning = req.flash("warning");
   res.locals.user = req.user || null;
+  res.locals.currentUser = req.user || null;
   next();
 });
 
