@@ -71,6 +71,11 @@ router.get("/agent/collection/collect/:collectionId", middleware.ensureAgentLogg
 				data: { donationId: collectionId, status: 'collected' },
 				recipients: ['donor']
 			});
+			await Notification.create({
+				message: `You marked a donation as collected`,
+				data: { donationId: collectionId, status: 'collected' },
+				recipients: ['agent']
+			});
 		} catch (notifErr) {
 			console.error('Could not create collected notification:', notifErr);
 		}

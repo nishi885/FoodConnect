@@ -74,6 +74,11 @@ router.get("/admin/donation/accept/:donationId", middleware.ensureAdminLoggedIn,
 				data: { donationId, status: 'accepted' },
 				recipients: ['donor']
 			});
+			await Notification.create({
+				message: `You accepted a donation request`,
+				data: { donationId, status: 'accepted' },
+				recipients: ['admin']
+			});
 		} catch (notifErr) {
 			console.error('Could not create accept notification:', notifErr);
 		}
@@ -98,6 +103,11 @@ router.get("/admin/donation/reject/:donationId", middleware.ensureAdminLoggedIn,
 				message: `Your donation was rejected by admin`,
 				data: { donationId, status: 'rejected' },
 				recipients: ['donor']
+			});
+			await Notification.create({
+				message: `You rejected a donation request`,
+				data: { donationId, status: 'rejected' },
+				recipients: ['admin']
 			});
 		} catch (notifErr) {
 			console.error('Could not create reject notification:', notifErr);
@@ -140,6 +150,11 @@ router.post("/admin/donation/assign/:donationId", middleware.ensureAdminLoggedIn
 				message: `A donation has been assigned to you`,
 				data: { donationId, agentId: agent, adminToAgentMsg },
 				recipients: ['agent']
+			});
+			await Notification.create({
+				message: `You assigned a donation to an agent`,
+				data: { donationId, agentId: agent, adminToAgentMsg },
+				recipients: ['admin']
 			});
 		} catch (notifErr) {
 			console.error('Could not create assign notification:', notifErr);

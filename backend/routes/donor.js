@@ -36,6 +36,11 @@ router.post("/donor/donate", middleware.ensureDonorLoggedIn, async (req,res) => 
 				data: { donationId: newDonation._id, donorId: req.user._id },
 				recipients: ['admin']
 			});
+			await Notification.create({
+				message: `Your donation request was sent successfully`,
+				data: { donationId: newDonation._id, donorId: req.user._id },
+				recipients: ['donor']
+			});
 		} catch (notifErr) {
 			console.error('Could not create donation notification:', notifErr);
 		}
