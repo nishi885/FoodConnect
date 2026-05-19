@@ -9,9 +9,13 @@ module.exports = function(passport) {
 				.then(user => {
 					if(!user)
 						return done(null, false, { message: "The email is not registered" });
-					
+
+					if (user.isVerified === false) {
+						return done(null, false, { message: "Please verify your email before logging in." });
+					}
+
 					bcrypt.compare(password, user.password, (err, isMatch) => {
-						if(err)	throw err;
+						if(err) throw err;
 						if(!isMatch)
 							return done(null, false, {message: "Password incorrect"});
 						else
