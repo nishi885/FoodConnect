@@ -42,8 +42,13 @@ if(btn) {
 
 	async function fetchNotifs() {
 		try {
-			const res = await fetch('/notifications');
-			if (!res.ok) return;
+			const res = await fetch('/notifications', { credentials: 'same-origin' });
+			if (!res.ok) {
+				if (res.status === 401) {
+					badge.style.display = 'none';
+				}
+				return;
+			}
 			const data = await res.json();
 			const { unreadCount, notifications } = data;
 			if (unreadCount > 0) {
@@ -70,7 +75,7 @@ if(btn) {
 						item.dataset.id = n._id;
 						item.addEventListener('click', async () => {
 							try {
-								await fetch('/notifications/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: n._id }) });
+								await fetch('/notifications/mark-read', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: n._id }) });
 								right.innerHTML = '';
 								badge.textContent = Math.max(0, Number(badge.textContent) - 1);
 								if (badge.textContent === '0') badge.style.display = 'none';
@@ -97,7 +102,7 @@ if(btn) {
 		markAllBtn.addEventListener('click', async (e) => {
 			e.preventDefault();
 			try {
-				await fetch('/notifications/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+				await fetch('/notifications/mark-read', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
 				const badges = document.querySelectorAll('#notif-list .badge');
 				badges.forEach(b => b.remove());
 				badge.style.display = 'none';

@@ -4,8 +4,11 @@ const Notification = require('../models/notification');
 const middleware = require('../middleware/index.js');
 
 // Get notifications for current user (by role or 'all')
-router.get('/notifications', middleware.ensureLoggedIn, async (req, res) => {
+router.get('/notifications', async (req, res) => {
     try {
+        if (!req.isAuthenticated || !req.isAuthenticated()) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
         const role = req.user.role;
         const notifications = await Notification.find({ recipients: { $in: [role, 'all'] } }).sort({ createdAt: -1 }).lean();
         // mark read status per user
@@ -25,8 +28,11 @@ router.get('/notifications', middleware.ensureLoggedIn, async (req, res) => {
 });
 
 // Mark one or all notifications as read for current user
-router.post('/notifications/mark-read', middleware.ensureLoggedIn, async (req, res) => {
+router.post('/notifications/mark-read', async (req, res) => {
     try {
+        if (!req.isAuthenticated || !req.isAuthenticated()) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
         const { id } = req.body;
         if (id) {
             await Notification.updateOne({ _id: id }, { $addToSet: { isReadBy: req.user._id } });
