@@ -41,7 +41,7 @@ header
 	height: 70px;
 	font-weight: 500;
 	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
-	overflow: hidden; /* prevent large header images from pushing content */
+	overflow: visible; /* allow dropdowns and popups to escape header bounds */
 }
 header .nav-link
 {
