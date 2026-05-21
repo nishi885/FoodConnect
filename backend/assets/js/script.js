@@ -20,6 +20,20 @@ if(btn) {
 	});
 }
 
+// Toggle sidebar when clicking the user initial circle in header
+const userIcon = document.getElementById('user-icon');
+if (userIcon) {
+	const toggleSidebar = () => {
+		const sidebar = document.getElementById('sidebar');
+		if (!sidebar) return;
+		sidebar.classList.toggle('sidebar-hide');
+		const expanded = sidebar.classList.contains('sidebar-hide') ? 'false' : 'true';
+		userIcon.setAttribute('aria-expanded', expanded);
+	};
+	userIcon.addEventListener('click', toggleSidebar);
+	userIcon.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSidebar(); } });
+}
+
 // Notification polling and popup
 (function() {
 	if (!document.getElementById('notif-badge')) return;

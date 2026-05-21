@@ -27,7 +27,7 @@
 								<li><a class="dropdown-item text-center" href="#" id="mark-all-read">Mark all as read</a></li>
 							</ul>
 						</li>
-						<li class="user-icon"><%= currentUser.firstName[0] %></li>
+						<li class="user-icon" id="user-icon" role="button" tabindex="0" aria-controls="sidebar" aria-expanded="false"><%= currentUser.firstName[0] %></li>
 					<% } else { %>
 						<li class="nav-item"><a class="nav-link" href="/auth/login">Login</a></li>
 						<li class="nav-item"><a class="nav-link" href="/auth/signup">Signup</a></li>

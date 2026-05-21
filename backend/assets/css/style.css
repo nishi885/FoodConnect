@@ -66,6 +66,7 @@ header .user-icon
     width: 40px;
     text-align: center;
     font-weight: 700;
+	cursor: pointer;
 }
 header .navbar-toggler:focus
 {
