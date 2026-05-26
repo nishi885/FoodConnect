@@ -5,6 +5,8 @@ const User = require("../models/user.js");
 const Donation = require("../models/donation.js");
 const Notification = require("../models/notification.js");
 
+const normalizeIdList = value => Array.isArray(value) ? value : value ? [value] : [];
+
 
 router.get("/donor/dashboard", middleware.ensureDonorLoggedIn, async (req,res) => {
 	const donorId = req.user._id;
@@ -58,7 +60,10 @@ router.post("/donor/donate", middleware.ensureDonorLoggedIn, async (req,res) => 
 router.get("/donor/donations/pending", middleware.ensureDonorLoggedIn, async (req,res) => {
 	try
 	{
-		const pendingDonations = await Donation.find({ donor: req.user._id, status: ["pending", "rejected", "accepted", "assigned"] }).populate("agent");
+		const pendingDonations = await Donation.find({
+			donor: req.user._id,
+			status: { $in: ["pending", "rejected"] }
+		}).sort({ _id: -1 }).populate("agent");
 		res.render("donor/pendingDonations", { title: "Pending Donations", pendingDonations });
 	}
 	catch(err)
@@ -72,7 +77,10 @@ router.get("/donor/donations/pending", middleware.ensureDonorLoggedIn, async (re
 router.get("/donor/donations/previous", middleware.ensureDonorLoggedIn, async (req,res) => {
 	try
 	{
-		const previousDonations = await Donation.find({ donor: req.user._id, status: "collected" }).populate("agent");
+		const previousDonations = await Donation.find({
+			donor: req.user._id,
+			status: { $in: ["accepted", "assigned", "collected", "rejected"] }
+		}).sort({ _id: -1 }).populate("agent");
 		res.render("donor/previousDonations", { title: "Previous Donations", previousDonations });
 	}
 	catch(err)
@@ -83,11 +91,42 @@ router.get("/donor/donations/previous", middleware.ensureDonorLoggedIn, async (r
 	}
 });
 
-router.get("/donor/donation/deleteRejected/:donationId", async (req,res) => {
+
+router.post("/donor/donation/deleteSelected", middleware.ensureDonorLoggedIn, async (req,res) => {
+	try
+	{
+		const selectedDonationIds = normalizeIdList(req.body.selectedDonationIds);
+
+		if(selectedDonationIds.length === 0) {
+			req.flash("warning", "Select at least one donation request to cancel.");
+			return res.redirect("/donor/donations/pending");
+		}
+
+		const deleteResult = await Donation.deleteMany({
+			donor: req.user._id,
+			_id: { $in: selectedDonationIds },
+		});
+		if(deleteResult.deletedCount === 0) {
+			req.flash("warning", "No pending requests were cancelled.");
+		} else {
+			req.flash("success", "Selected donation requests cancelled successfully.");
+		}
+
+		res.redirect("/donor/donations/pending");
+	}
+	catch(err)
+	{
+		console.log(err);
+		req.flash("error", "Some error occurred on the server.")
+		res.redirect("back");
+	}
+});
+
+router.get("/donor/donation/deleteRejected/:donationId", middleware.ensureDonorLoggedIn, async (req,res) => {
 	try
 	{
 		const donationId = req.params.donationId;
-		await Donation.findByIdAndDelete(donationId);
+		await Donation.findOneAndDelete({ _id: donationId, donor: req.user._id, status: "rejected" });
 		res.redirect("/donor/donations/pending");
 	}
 	catch(err)

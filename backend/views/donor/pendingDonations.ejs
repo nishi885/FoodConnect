@@ -9,8 +9,22 @@
 		</div>
 		
 		<div class="m-4">
-			<% for(let i=0; i<pendingDonations.length; i++) { %>
-				<div class="bg-white mb-4 p-4 shadow-sm">
+			<% if(pendingDonations.length === 0) { %>
+				<div class="bg-white p-4 shadow-sm text-center">
+					<p class="mb-0">No pending or rejected donation requests found.</p>
+				</div>
+			<% } else { %>
+				<% for(let i=0; i<pendingDonations.length; i++) { %>
+					<div class="bg-white mb-4 p-4 shadow-sm">
+						<div class="d-flex justify-content-between align-items-start mb-3">
+							<div>
+								<span class="fw-bold">Donation request</span>
+							</div>
+							<form action="/donor/donation/deleteSelected" method="POST" onsubmit="return confirm('Cancel this donation request?')">
+								<input type="hidden" name="selectedDonationIds" value="<%= pendingDonations[i]._id %>">
+								<button type="submit" class="btn btn-danger">Cancel request</button>
+							</form>
+						</div>
 					<div class="mb-2">
 						<span>Food type:</span>
 						<span><%= pendingDonations[i].foodType %></span>
@@ -43,20 +57,10 @@
 							<span class="text-pending">Your donation request hasn't been processed yet.</span>
 						<% } else if(pendingDonations[i].status == "rejected") { %>
 							<span class="text-rejected">Your donation request has been rejected</span>
-						<% } else if(pendingDonations[i].status == "accepted") { %>
-							<span class="text-accepted">Your donation request has been accepted. Please wait while an agent is being assigned.</span>
-						<% } else if(pendingDonations[i].status == "assigned") { %>
-							<span class="text-assigned">Your donation request has been accepted and the agent: <%= pendingDonations[i].agent.firstName + " " + pendingDonations[i].agent.lastName %> has been assigned for collecting food from your house.</span>
 						<% } %>
 					</div>
-					
-					<% if(pendingDonations[i].status == "rejected") { %>
-						<div class="mb-2">
-							<a class="btn" href="/donor/donation/deleteRejected/<%= pendingDonations[i]._id %>">Okay</a>
 						</div>
 					<% } %>
-					
-				</div>
 			<% } %>
 		</div>
 		

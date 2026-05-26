@@ -9,6 +9,11 @@
 		</div>
 		
 		<div class="col col-sm-10 col-12 m-auto my-4" style="max-height: 75%; overflow: auto;">
+			<% if(previousDonations.length === 0) { %>
+				<div class="bg-white p-4 shadow-sm text-center">
+					<p class="mb-0">No collected or rejected donations found yet.</p>
+				</div>
+			<% } else { %>
 			<table class="table table-info table-striped table-hover m-0 bg-white">
 				<thead>
 					<tr>
@@ -33,6 +38,7 @@
 					<% } %>
 				</tbody>
 			</table>
+			<% } %>
 		</div>
 		
 	</div>

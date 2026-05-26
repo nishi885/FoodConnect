@@ -11,6 +11,7 @@ A simple food donation coordination system built with Node.js, Express, EJS, Mon
 - Agent dashboard with assigned collections and a route planner placeholder
 - Donation approval and assignment workflows
 - Simple and clean dashboard UI improvements with cards and action links
+- Role-specific chatbot widget for admin, agent, and donor users
 
 ## Current features
 
@@ -27,6 +28,13 @@ A simple food donation coordination system built with Node.js, Express, EJS, Mon
 - Modern dashboard cards for admin/agent/donor views
 - Quick action buttons for important navigation
 - New placeholder route planner view for agents
+
+### Chatbot
+- One shared chat widget with a different persona for each role
+- Donor bot helps with requests, statuses, and donation history
+- Admin bot helps with approvals, assignments, and dashboard workflow
+- Agent bot helps with assigned collections and collection completion
+- Optional OpenAI support through `OPENAI_API_KEY` and `OPENAI_MODEL`
 
 ## Setup and run
 
@@ -47,6 +55,8 @@ A simple food donation coordination system built with Node.js, Express, EJS, Mon
    SESSION_SECRET=your_session_secret
    NODE_ENV=development
    PORT=3000
+   OPENAI_API_KEY=your_optional_openai_api_key
+   OPENAI_MODEL=gpt-4o-mini
    ```
 
 4. Run the app:

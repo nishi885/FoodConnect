@@ -37,7 +37,7 @@ router.get("/admin/donations/pending", middleware.ensureAdminLoggedIn, async (re
 router.get("/admin/donations/previous", middleware.ensureAdminLoggedIn, async (req,res) => {
 	try
 	{
-		const previousDonations = await Donation.find({ status: "collected" }).populate("donor");
+		const previousDonations = await Donation.find({ status: { $in: ["collected", "rejected"] } }).populate("donor");
 		res.render("admin/previousDonations", { title: "Previous Donations", previousDonations });
 	}
 	catch(err)
