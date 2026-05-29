@@ -7,7 +7,7 @@ const methodOverride = require("method-override");
 const expressLayouts = require("express-ejs-layouts");
 const dotenv = require("dotenv");
 
-// Suppress non-critical deprecation warnings from dependencies
+
 const originalEmit = process.emit;
 process.emit = function(type, ...args) {
 	if (type === 'warning' && args[0]?.code === 'DEP0044') {
