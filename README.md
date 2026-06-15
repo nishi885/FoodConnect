@@ -1,4 +1,4 @@
-# FoodConnect / FoodBridge
+# FoodConnect
 
 A simple food donation coordination system built with Node.js, Express, EJS, MongoDB and Passport. The app connects donors, admins and collection agents to manage donation requests, approvals, assignments, and collections.
 
