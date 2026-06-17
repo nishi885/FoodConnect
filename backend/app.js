@@ -6,6 +6,7 @@ const passport = require("passport");
 const methodOverride = require("method-override");
 const expressLayouts = require("express-ejs-layouts");
 const dotenv = require("dotenv");
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 
 const originalEmit = process.emit;
@@ -24,8 +25,7 @@ const adminRoutes = require("./routes/admin");
 const donorRoutes = require("./routes/donor");
 const agentRoutes = require("./routes/agent");
 const notificationsRoutes = require("./routes/notifications");
-
-dotenv.config({ path: path.join(__dirname, ".env") });
+const faqRoutes = require("./routes/faq");
 
 const app = express();
 const port = Number(process.env.PORT) || 5001;
@@ -69,6 +69,7 @@ app.use(adminRoutes);
 app.use(donorRoutes);
 app.use(agentRoutes);
 app.use(notificationsRoutes);
+app.use(faqRoutes);
 
 app.use((req, res) => {
 	res.status(404).render("404page", { title: "Page Not Found" });

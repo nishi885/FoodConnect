@@ -100,11 +100,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function sendQuestion(q) {
     appendMessage('user', q);
-    // simulate answer
-    setTimeout(() => {
-      const ans = answers[q] || 'Sorry, I don\'t have a canned answer for that. Please contact support or try another question.';
-      appendMessage('bot', ans);
-    }, 350);
+    appendMessage('bot', 'Typing...');
+
+    // send to server LLM endpoint
+    fetch('/api/faq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q, role })
+    })
+      .then(res => res.json())
+      .then(data => {
+        // replace the 'Typing...' bubble
+        const lastBot = chatEl.querySelectorAll('.faq-bubble.bot');
+        const text = data.answer || answers[q] || 'Sorry, no answer available.';
+        const suffix = data.source === 'canned' ? ' (fallback answer)' : (data.source === 'llm' ? ' (AI)' : '');
+        if (lastBot && lastBot.length) {
+          lastBot[lastBot.length - 1].textContent = text + suffix;
+        } else {
+          appendMessage('bot', text + suffix);
+        }
+      })
+      .catch(() => {
+        const lastBot = chatEl.querySelectorAll('.faq-bubble.bot');
+        const fallback = answers[q] || 'Sorry, I don\'t have a canned answer for that.';
+        if (lastBot && lastBot.length) {
+          lastBot[lastBot.length - 1].textContent = fallback + ' (fallback answer)';
+        } else {
+          appendMessage('bot', fallback + ' (fallback answer)');
+        }
+      });
   }
 
   send.addEventListener('click', () => {
