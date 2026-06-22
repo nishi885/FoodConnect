@@ -1,96 +1,162 @@
-# FoodConnect
+FoodConnect 🍱
 
-A simple food donation coordination system built with Node.js, Express, EJS, MongoDB and Passport. The app connects donors, admins and collection agents to manage donation requests, approvals, assignments, and collections.
+FoodConnect is a food donation coordination platform built with Node.js, Express.js, MongoDB, EJS, and Passport.js. It streamlines the process of managing food donations by connecting donors, collection agents, and administrators through a centralized system.
 
-## What is included
+The platform helps reduce food waste by enabling efficient donation tracking, approval workflows, and collection management.
 
-- User authentication with role-based login for `admin`, `agent`, and `donor`
-- Signup validation with strong password rules
-- Admin dashboard with donor, agent, and donation statistics
-- Donor dashboard with donation status and history
-- Agent dashboard with assigned collections and a route planner placeholder
-- Donation approval and assignment workflows
-- Simple and clean dashboard UI improvements with cards and action links
-- Role-specific chatbot widget for admin, agent, and donor users
+🚀 Features
+🔐 Authentication & Authorization
+Secure signup and login system
+Role-based access control:
+Admin
+Agent
+Donor
+Strong password validation rules
+Session-based authentication using Passport.js
+👤 Donor Module
+Submit food donation requests
+Track donation status in real time
+View donation history
+Access personalized dashboard
+🚚 Agent Module
+View assigned donation pickups
+Mark collections as completed
+Access collection history
+Route planner interface (currently a placeholder for future integration)
+🛠️ Admin Module
+Approve or reject donation requests
+Assign collection agents
+Monitor donation activities
+View dashboard statistics for:
+Total donations
+Registered donors
+Active agents
+Collection status
+💬 Role-Based Chatbot
+Shared chatbot interface with customized behavior for each role
+Donor Assistant
+Donation requests
+Status tracking
+Donation history support
+Agent Assistant
+Assigned pickup information
+Collection workflow guidance
+Admin Assistant
+Approval and assignment workflow support
+Dashboard navigation assistance
+Optional OpenAI integration via API key
+🎨 UI Enhancements
+Modern dashboard design
+Responsive card-based layout
+Quick action shortcuts
+Improved navigation experience
+🏗️ Tech Stack
+Backend
+Node.js
+Express.js
+MongoDB
+Mongoose
+Passport.js
+Frontend
+EJS
+HTML5
+CSS3
+JavaScript
+Authentication
+Passport Local Strategy
+Express Session
+📦 Installation
+1. Clone the Repository
+git clone https://github.com/nishi885/FoodConnect.git
+cd FoodConnect_nishi_clone/backend
+2. Install Dependencies
+npm install
+3. Configure Environment Variables
 
-## Current features
+Create a .env file inside the backend directory:
 
-### User roles
-- `admin`: manage donations, approve/reject requests, assign agents, view agent list
-- `agent`: collect assigned donations and view collection history
-- `donor`: submit donations and track pending / accepted requests
+MONGO_URI=your_mongodb_connection_string
+SESSION_SECRET=your_session_secret
+NODE_ENV=development
+PORT=3000
 
-### Authentication
-- Signup and login using email and password
-- Password validation requires uppercase, lowercase, digits, and only `@` as special character
+# Optional AI Integration
+HUGGINGFACE_API_KEY=your_optional_huggingface_key
+HUGGINGFACE_MODEL=Qwen/Qwen2.5-7B-Instruct
+HUGGINGFACE_API_URL=https://router.huggingface.co/v1/chat/completions
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o-mini
+4. Start the Application
+npm run dev
+5. Open in Browser
+http://localhost:3000
+📁 Project Structure
+backend/
+│
+├── app.js
+│
+├── config/
+│   ├── dbConnection.js
+│   └── passport.js
+│
+├── models/
+│   ├── User.js
+│   └── Donation.js
+│
+├── routes/
+│   ├── auth.js
+│   ├── admin.js
+│   ├── donor.js
+│   ├── agent.js
+│   └── home.js
+│
+├── views/
+│   ├── admin/
+│   ├── donor/
+│   ├── agent/
+│   └── partials/
+│
+└── assets/
+    └── css/
+🔄 Donation Workflow
+Donor
+   ↓
+Create Donation Request
+   ↓
+Admin Reviews Request
+   ↓
+Approve / Reject
+   ↓
+Assign Agent
+   ↓
+Agent Collects Donation
+   ↓
+Collection Completed
+🔮 Future Enhancements
+Password Recovery System
+Forgot Password page
+OTP generation and verification
+Email/SMS integration
+Secure password reset flow
+Smart Route Optimization
+Google Maps Directions API integration
+Mapbox / OSRM support
+Automatic shortest-route calculation
+Interactive map view for agents
+Additional Improvements
+Notification system
+Email alerts
+Donation analytics
+Mobile-friendly enhancements
+Real-time status updates
+🤝 Contributing
 
-### Dashboard improvements
-- Modern dashboard cards for admin/agent/donor views
-- Quick action buttons for important navigation
-- New placeholder route planner view for agents
+Contributions, suggestions, and feature requests are welcome. Feel free to fork the repository and submit a pull request.
 
-### Chatbot
-- One shared chat widget with a different persona for each role
-- Donor bot helps with requests, statuses, and donation history
-- Admin bot helps with approvals, assignments, and dashboard workflow
-- Agent bot helps with assigned collections and collection completion
-- Optional OpenAI support through `OPENAI_API_KEY` and `OPENAI_MODEL`
+📜 License
 
-## Setup and run
+This project is developed for educational and demonstration purposes and can be extended for production use.
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/nishi885/FoodConnect.git
-   cd FoodConnect_nishi_clone/backend
-   ```
+Developed with ❤️ to reduce food waste and improve food donation management.
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create `backend/.env` with:
-   ```env
-   MONGO_URI=your_mongodb_connection_string
-   SESSION_SECRET=your_session_secret
-   NODE_ENV=development
-   PORT=3000
-   OPENAI_API_KEY=your_optional_openai_api_key
-   OPENAI_MODEL=gpt-4o-mini
-   ```
-
-4. Run the app:
-   ```bash
-   npm run dev
-   ```
-
-5. Open in browser:
-   ```
-   http://localhost:3000
-   ```
-
-## Backend structure
-
-- `backend/app.js` - main Express app setup
-- `backend/config/dbConnection.js` - MongoDB connection logic
-- `backend/config/passport.js` - Passport login configuration
-- `backend/models/` - Mongoose models for user and donation
-- `backend/routes/` - route handlers for auth, home, admin, donor, agent
-- `backend/views/` - EJS templates and dashboard pages
-- `assets/css/` - shared styles for dashboard and layout
-
-## Notes and future improvements
-
-The current codebase does not yet include OTP-based password recovery or a fully integrated AI shortest-route planner. These are planned enhancements:
-
-- `Password reset / OTP flow`
-  - add a `forgot password` page
-  - send email/SMS OTP, verify code, and set a new password
-
-- `AI / distance shortest-route feature`
-  - integrate Google Maps Directions API, Mapbox, or OSRM
-  - compute shortest path for agent pickup locations
-  - show route planner in the agent dashboard
-
-Built for quick demo use and easy future enhancement.
-
+Ye version project ko kaafi professional aur portfolio-ready bana deta hai, especially agar GitHub README recruiters ya college project evaluation ke liye use karna hai.

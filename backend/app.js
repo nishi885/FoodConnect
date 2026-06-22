@@ -6,7 +6,6 @@ const passport = require("passport");
 const methodOverride = require("method-override");
 const expressLayouts = require("express-ejs-layouts");
 const dotenv = require("dotenv");
-dotenv.config({ path: path.join(__dirname, ".env") });
 
 
 const originalEmit = process.emit;
@@ -26,6 +25,8 @@ const donorRoutes = require("./routes/donor");
 const agentRoutes = require("./routes/agent");
 const notificationsRoutes = require("./routes/notifications");
 const faqRoutes = require("./routes/faq");
+
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 const port = Number(process.env.PORT) || 5001;

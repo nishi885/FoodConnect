@@ -46,13 +46,13 @@ document.addEventListener('DOMContentLoaded', function () {
     'How do I sign up?': 'Use the signup page to create an account as a donor, agent, or admin, get verification email.Enter OTP and you are registered.',
     'What do statuses mean?': 'Assigned: an agent was assigned. Accepted: agent confirmed. Rejected: system declined. Collected: pickup completed. Pending: awaiting action.',
     'How do I donate?': 'Go to the Donate page, fill out details, and choose pickup preferences.',
-    'Can I schedule a pickup?': 'Yes — provide preferred times when creating the donation and the system will try to match an agent.',
+    'Can I schedule a pickup?': 'Yes, provide preferred times when creating the donation and the system will try to match an agent.',
     'What does Assigned mean?': 'An agent has been assigned to pick up the donation; they may still need to accept.',
     'What does Accepted mean?': 'The assigned agent confirmed they will pick up the donation.',
     'What does Rejected mean?': 'The assigned agent declined the assignment; the system or an admin can reassign another agent.',
     'What does Collected mean?': 'The agent marked the donation as picked up and completed the collection process.',
     'How long until pickup?': 'Pickup time depends on agent availability and distance; admins/agents usually update estimated times in the dashboard.',
-    'Can I cancel or reschedule my donation?': 'Yes — edit or cancel the donation from your dashboard if the UI provides that option, or contact support if not.',
+    'Can I cancel or reschedule my donation?': 'Yes, edit or cancel the donation from your dashboard if the UI provides that option, or contact support if not.',
     'How do I accept an assignment?': 'Open the assignment from your dashboard and click Accept to confirm pickup.',
     "What if I cannot pick up?": 'Click Reject on the assignment so it can be reassigned to another agent; notify admins if needed.',
     'How are agents matched to donations?': 'Agents are matched based on proximity, availability, and load; admins can also assign manually.',
@@ -108,25 +108,27 @@ document.addEventListener('DOMContentLoaded', function () {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question: q, role })
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('FAQ request failed');
+        return res.json();
+      })
       .then(data => {
         // replace the 'Typing...' bubble
         const lastBot = chatEl.querySelectorAll('.faq-bubble.bot');
         const text = data.answer || answers[q] || 'Sorry, no answer available.';
-        const suffix = data.source === 'canned' ? ' (fallback answer)' : (data.source === 'llm' ? ' (AI)' : '');
         if (lastBot && lastBot.length) {
-          lastBot[lastBot.length - 1].textContent = text + suffix;
+          lastBot[lastBot.length - 1].textContent = text;
         } else {
-          appendMessage('bot', text + suffix);
+          appendMessage('bot', text);
         }
       })
       .catch(() => {
         const lastBot = chatEl.querySelectorAll('.faq-bubble.bot');
-        const fallback = answers[q] || 'Sorry, I don\'t have a canned answer for that.';
+        const fallback = answers[q] || 'Sorry, I could not answer that right now. Please try again in a moment.';
         if (lastBot && lastBot.length) {
-          lastBot[lastBot.length - 1].textContent = fallback + ' (fallback answer)';
+          lastBot[lastBot.length - 1].textContent = fallback;
         } else {
-          appendMessage('bot', fallback + ' (fallback answer)');
+          appendMessage('bot', fallback);
         }
       });
   }
