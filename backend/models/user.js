@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema({
 	},
 	address: String,
 	phone: Number,
+	location: {
+		lat: Number,
+		lng: Number
+	},
 	joinedTime: {
 		type: Date,
 		default: Date.now

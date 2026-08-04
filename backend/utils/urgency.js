@@ -1,13 +1,16 @@
-function checkUrgency(expiryTime) {
+// utils/urgency.js
+// Expiry urgency classification
+/**
+ * Classify expiry urgency
+ * @param {Date} expiryTime
+ * @returns {string} 'URGENT' | 'MEDIUM' | 'SAFE'
+ */
+function classifyUrgency(expiryTime) {
   const now = new Date();
-  const expiry = new Date(expiryTime);
-
-  const diffMs = expiry - now;
-  const diffHours = diffMs / (1000 * 60 * 60);
-
-  if (diffHours <= 2) return "URGENT";
-  if (diffHours <= 5) return "MEDIUM";
-  return "SAFE";
+  const diffMs = new Date(expiryTime) - now;
+  const diffHrs = diffMs / (1000 * 60 * 60);
+  if (diffHrs < 2) return 'URGENT';
+  if (diffHrs < 5) return 'MEDIUM';
+  return 'SAFE';
 }
-
-module.exports = { checkUrgency };
+module.exports = { classifyUrgency };

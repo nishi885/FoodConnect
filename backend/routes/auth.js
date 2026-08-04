@@ -3,9 +3,11 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/user.js");
 const Donation = require("../models/donation.js");
+const Notification = require("../models/notification.js");
 const { sendOtpEmail } = require("../config/mail.js");
 const passport = require("passport");
 const middleware = require("../middleware/index.js")
+const { issueAuthCookie, clearAuthCookie } = require("../config/jwt");
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -229,19 +231,23 @@ router.post('/auth/verify', middleware.ensureNotLoggedIn, async (req, res) => {
 
 		await newUser.save();
 
+		// create an in-app notification for admins about the new user (non-blocking)
+		try {
+			await Notification.create({
+				message: `New user registered: ${newUser.firstName} ${newUser.lastName} (${newUser.role})`,
+				data: { userId: newUser._id, role: newUser.role },
+				recipients: ['admin']
+			});
+		} catch (notifErr) {
+			console.error('Could not create notification:', notifErr);
+		}
+
 		// remove pending signup from session
 		delete req.session.pendingSignup;
 
-		// automatically log the user in after verification
-		req.login(newUser, function(err) {
-			if (err) {
-				console.error('Login after verify failed:', err);
-				req.flash('success', 'Email verified. Please log in.');
-				return res.redirect('/auth/login');
-			}
-			req.flash('success', 'Email verified and logged in successfully.');
-			return res.redirect(req.session.returnTo || `/${newUser.role}/dashboard`);
-		});
+		issueAuthCookie(res, newUser);
+		req.flash('success', 'Email verified and logged in successfully.');
+		return res.redirect(req.session.returnTo || `/${newUser.role}/dashboard`);
 	} catch (err) {
 		console.error('Error verifying OTP', err);
 		req.flash('error', 'Server error verifying OTP');
@@ -279,24 +285,24 @@ router.post("/auth/login", middleware.ensureNotLoggedIn,
 	passport.authenticate('local', {
 		failureRedirect: "/auth/login",
 		failureFlash: true,
-		successFlash: true
+		session: false
 	}), (req,res) => {
+		issueAuthCookie(res, req.user);
+		req.flash('success', 'Logged in successfully.');
 		res.redirect(req.session.returnTo || `/${req.user.role}/dashboard`);
 	}
 );
 
 
-router.get("/auth/logout", (req, res, next) => {
-	req.logout(function(err) {
-		if (err) { return next(err); }
-		req.flash("success", "Logged out successfully from FoodBridge");
-		res.redirect("/");
-	});
+router.get("/auth/logout", (req, res) => {
+	clearAuthCookie(res);
+	req.flash("success", "Logged out successfully from FoodConnect");
+	res.redirect("/");
 });
 
 
 // Allow any logged-in user to unregister (delete) their own account
-router.post('/auth/unregister', middleware.ensureLoggedIn, async (req, res, next) => {
+router.post('/auth/unregister', middleware.ensureLoggedIn, async (req, res) => {
 	try {
 		const userId = req.user._id;
 		const role = req.user.role;
@@ -311,11 +317,9 @@ router.post('/auth/unregister', middleware.ensureLoggedIn, async (req, res, next
 
 		await User.findByIdAndDelete(userId);
 
-		req.logout(function(err) {
-			if (err) return next(err);
-			req.flash('success', 'Your account has been unregistered successfully.');
-			return res.redirect('/');
-		});
+		clearAuthCookie(res);
+		req.flash('success', 'Your account has been unregistered successfully.');
+		return res.redirect('/');
 	} catch (err) {
 		console.error('Error unregistering user:', err);
 		req.flash('error', 'Could not unregister account.');

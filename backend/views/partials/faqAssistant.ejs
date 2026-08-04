@@ -1,0 +1,22 @@
+<link rel="stylesheet" href="/assets/css/faqAssistant.css">
+<div id="faq-assistant" class="faq-assistant" data-role="<%= currentUser ? currentUser.role : 'guest' %>">
+  <button id="faq-toggle" class="faq-toggle" aria-label="Open FAQs">FAQs</button>
+
+  <div id="faq-panel" class="faq-panel" aria-hidden="true">
+    <div class="faq-header">
+      <strong>FAQs</strong>
+      <button id="faq-close" class="faq-close" aria-label="Close">×</button>
+    </div>
+
+    <div id="faq-chat" class="faq-chat" role="log" aria-live="polite"></div>
+
+    <div class="faq-suggestions" id="faq-suggestions"></div>
+
+    <div class="faq-input-row">
+      <input id="faq-input" class="faq-input" placeholder="Ask a question..." />
+      <button id="faq-send" class="faq-send">Send</button>
+    </div>
+  </div>
+
+  <script src="/assets/js/faqAssistant.js"></script>
+</div>
