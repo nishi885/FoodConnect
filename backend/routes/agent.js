@@ -3,6 +3,7 @@ const router = express.Router();
 const middleware = require("../middleware/index.js");
 const User = require("../models/user.js");
 const Donation = require("../models/donation.js");
+const Notification = require("../models/notification.js");
 
 router.get("/agent/dashboard", middleware.ensureAgentLoggedIn, async (req,res) => {
 	const agentId = req.user._id;
@@ -64,6 +65,20 @@ router.get("/agent/collection/collect/:collectionId", middleware.ensureAgentLogg
 	{
 		const collectionId = req.params.collectionId;
 		await Donation.findByIdAndUpdate(collectionId, { status: "collected", collectionTime: Date.now() });
+		try {
+			await Notification.create({
+				message: `Your donation was collected successfully`,
+				data: { donationId: collectionId, status: 'collected' },
+				recipients: ['donor']
+			});
+			await Notification.create({
+				message: `You marked a donation as collected`,
+				data: { donationId: collectionId, status: 'collected' },
+				recipients: ['agent']
+			});
+		} catch (notifErr) {
+			console.error('Could not create collected notification:', notifErr);
+		}
 		req.flash("success", "Donation collected successfully");
 		res.redirect(`/agent/collection/view/${collectionId}`);
 	}
@@ -100,7 +115,7 @@ router.put("/agent/profile", middleware.ensureAgentLoggedIn, async (req,res) => 
 	
 });
 router.get("/agent/profile/google-maps", middleware.ensureAgentLoggedIn, (req, res) => {
-    res.render("agent/googleMaps", { title: "Google Maps" });
+    res.redirect("/app/agent/route-planner");
 });
 
 module.exports = router;

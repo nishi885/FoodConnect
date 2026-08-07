@@ -1,6 +1,5 @@
 const nodemailer = require('nodemailer');
 
-// Creates and returns a nodemailer transporter using env vars.
 function createTransporter() {
 	const host = process.env.EMAIL_HOST;
 	const port = process.env.EMAIL_PORT || 587;
@@ -15,7 +14,7 @@ function createTransporter() {
 	return nodemailer.createTransport({
 		host,
 		port: Number(port),
-		secure: Number(port) === 465, // true for 465, false for other ports
+		secure: Number(port) === 465,
 		auth: { user, pass }
 	});
 }
