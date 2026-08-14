@@ -1,0 +1,242 @@
+:root {
+  --bg: #eef6f8;
+  --surface: #ffffff;
+  --text: #122f3c;
+  --muted: #52606d;
+  --primary: #2a9d8f;
+  --primary-dark: #1f7a6d;
+  --border: #d7e1e4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, #f5fbfd 0%, #e8f4f7 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand a {
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-nav a,
+.nav-button {
+  color: white;
+  border: none;
+  background: transparent;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+}
+
+.nav-button:hover,
+.app-nav a:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.app-body {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.app-sidebar {
+  min-width: 220px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 1rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-user {
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.app-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.app-sidebar li + li {
+  margin-top: 0.75rem;
+}
+
+.app-sidebar a {
+  color: var(--text);
+}
+
+.page-content {
+  flex: 1;
+}
+
+.page-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 1.5rem;
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.06);
+}
+
+.auth-card,
+.profile-form,
+.donation-form,
+.data-table {
+  width: 100%;
+}
+
+.auth-form,
+.profile-form,
+.donation-form {
+  display: grid;
+  gap: 1rem;
+}
+
+label {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+input,
+textarea,
+select {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.85rem 1rem;
+  background: #f8fcfd;
+}
+
+button {
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 0.95rem 1.25rem;
+  font-weight: 700;
+}
+
+.form-error {
+  color: #c53030;
+  background: #ffe3e3;
+  border: 1px solid #f5c2c2;
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+}
+
+.form-message {
+  color: #046c4e;
+  background: #d1f1ea;
+  border: 1px solid #94d3c2;
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.stat-card {
+  background: #fbffff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid var(--border);
+  padding: 0.85rem;
+  text-align: left;
+}
+
+.map-canvas {
+  height: 420px;
+  border-radius: 24px;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.map-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.map-actions button {
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+}
+
+.map-summary {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: #eafaf5;
+  color: #115e4a;
+  border: 1px solid #bfead7;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .app-body {
+    flex-direction: column;
+  }
+
+  .app-sidebar {
+    width: 100%;
+  }
+}

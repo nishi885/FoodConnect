@@ -1,0 +1,22 @@
+header .header-logout {
+  display: inline-block !important;
+  margin-left: 0.75rem;
+  padding: 0.45rem 0.9rem;
+  color: #ffffff !important;
+  background: transparent !important;
+  border: 2px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 7px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+header .header-logout:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: none;
+  transform: none;
+}
+
+#sidebar .sidebar-logout {
+  width: auto;
+  min-width: 110px;
+}

@@ -5,8 +5,8 @@ const User = require("../models/user.js");
 const Donation = require("../models/donation.js");
 const Notification = require("../models/notification.js");
 const { sendOtpEmail } = require("../config/mail.js");
-const passport = require("passport");
-const middleware = require("../middleware/index.js")
+const middleware = require("../middleware/index.js");
+const { signToken, setAuthCookie, clearAuthCookie } = require("../config/jwt.js");
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -19,56 +19,38 @@ const passwordValid = (p) => {
 
 
 
-router.get("/auth/signup", middleware.ensureNotLoggedIn, (req,res) => {
-	res.render("auth/signup", { title: "User Signup" });
-});
-
 router.post("/auth/signup", middleware.ensureNotLoggedIn, async (req, res) => {
 	const { firstName, lastName, email, password1, password2, role } = req.body;
-	let errors = [];
-	console.log("Signup form data:", req.body);
+	const errors = [];
+
 	if (!firstName || !lastName || !email || !password1 || !password2) {
 		errors.push({ msg: "Please fill in all the fields" });
 	}
-	// Email validation
-	const emailRegex = /^([a-zA-Z0-9_\-.+]+)@([a-zA-Z0-9\-.]+)\.([a-zA-Z]{2,5})$/;
+	const emailRegex = /^([a-zA-Z0-9_\-.+]+)@([a-zA-Z0-9\-.]+)\.([A-Za-z]{2,5})$/;
 	if (!emailRegex.test(email)) {
 		errors.push({ msg: "Please enter a valid email address." });
 	}
-	// Password validation: at least one uppercase, one lowercase, only @ as special character, min 4 chars
 	const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])[A-Za-z0-9@]{4,}$/;
-	const allowedSpecial = /^[A-Za-z0-9@]*$/;
 	if (password1 !== password2) {
 		errors.push({ msg: "Passwords are not matching" });
 	}
-	if (!passwordRegex.test(password1) || !allowedSpecial.test(password1)) {
+	if (!passwordRegex.test(password1)) {
 		errors.push({ msg: "Password must contain at least one uppercase, one lowercase letter, only @ as special character, and be at least 4 characters." });
 	}
 	if (errors.length > 0) {
-		console.log("Signup validation errors:", errors);
-		return res.render("auth/signup", {
-			title: "User Signup",
-			errors, firstName, lastName, email, password1, password2
-		});
+		return res.status(400).json({ errors });
 	}
 
 	try {
 		const user = await User.findOne({ email: email });
 		if (user) {
-			errors.push({ msg: "This Email is already registered. Please try another email." });
-			console.log("Signup error: Email already registered");
-			return res.render("auth/signup", {
-				title: "User Signup",
-				firstName, lastName, errors, email, password1, password2
-			});
+			return res.status(409).json({ error: "This email is already registered." });
 		}
 
 		const otp = generateOtp();
-		const otpExpires = Date.now() + 10 * 60 * 1000;
 		const salt = bcrypt.genSaltSync(10);
 		const hash = bcrypt.hashSync(password1, salt);
 
-		// keep signup pending in session until OTP is verified
 		req.session.pendingSignup = {
 			firstName,
 			lastName,
@@ -76,46 +58,29 @@ router.post("/auth/signup", middleware.ensureNotLoggedIn, async (req, res) => {
 			password: hash,
 			role,
 			otp,
-			otpExpires
+			otpExpires: Date.now() + 10 * 60 * 1000
 		};
 
 		const sent = await sendOtpEmail(email, otp);
 		if (!sent) {
 			delete req.session.pendingSignup;
-			req.flash('error', 'Could not send verification email. Please try again.');
-			return res.render("auth/signup", {
-				title: "User Signup",
-				firstName, lastName, email, password1, password2
-			});
+			return res.status(500).json({ error: 'Could not send verification email. Please try again.' });
 		}
 
-		req.flash('success', 'OTP sent to your email. Please verify to complete signup.');
-		return res.redirect('/auth/verify');
+		return res.json({ ok: true, redirect: '/auth/verify' });
 	} catch (err) {
-		console.log("Signup server error:", err);
-		req.flash("error", "Some error occurred on the server.");
-		res.redirect("back");
+		console.error('Signup server error:', err);
+		return res.status(500).json({ error: 'Server error during signup.' });
 	}
 });
 
-
-router.get("/auth/login", middleware.ensureNotLoggedIn, (req,res) => {
-	res.render("auth/login", { title: "User login" });
-});
-
-
-// Forgot password: request OTP
-router.get('/auth/forgot', middleware.ensureNotLoggedIn, (req, res) => {
-	res.render('auth/forgot', { title: 'Forgot Password' });
-});
 
 router.post('/auth/forgot', middleware.ensureNotLoggedIn, async (req, res) => {
 	const { email } = req.body;
 	try {
 		const user = await User.findOne({ email });
 		if (!user) {
-			req.flash('error', 'No account found with that email');
-			return res.redirect('/auth/forgot');
+			return res.status(404).json({ error: 'No account found with that email' });
 		}
 		const otp = generateOtp();
 		user.resetOtp = otp;
@@ -124,48 +89,36 @@ router.post('/auth/forgot', middleware.ensureNotLoggedIn, async (req, res) => {
 		const { sendEmail } = require('../config/mail');
 		const sent = await sendEmail(email, 'Password reset code', `Your password reset code is: ${otp}`, `<p>Your password reset code is: <strong>${otp}</strong></p><p>It is valid for 10 minutes.</p>`);
 		if (!sent) {
-			req.flash('error', 'Could not send reset email. Please try again later.');
-			return res.redirect('/auth/forgot');
+			return res.status(500).json({ error: 'Could not send reset email. Please try again later.' });
 		}
-		req.flash('info', 'Password reset code sent to your email.');
-		return res.redirect(`/auth/reset?email=${encodeURIComponent(email)}`);
+		return res.json({ ok: true, redirect: `/auth/reset?email=${encodeURIComponent(email)}` });
 	} catch (err) {
 		console.error('Error in forgot password:', err);
-		req.flash('error', 'Server error');
-		return res.redirect('/auth/forgot');
+		return res.status(500).json({ error: 'Server error' });
 	}
-});
-
-// Reset password: verify OTP + set new password
-router.get('/auth/reset', middleware.ensureNotLoggedIn, (req, res) => {
-	const email = req.query.email || '';
-	res.render('auth/reset', { title: 'Reset Password', email });
 });
 
 router.post('/auth/reset', middleware.ensureNotLoggedIn, async (req, res) => {
 	const { email, otp, password1, password2 } = req.body;
-	let errors = [];
+	const errors = [];
 	if (!email || !otp || !password1 || !password2) {
 		errors.push({ msg: 'Please fill in all fields' });
 	}
 	if (password1 !== password2) errors.push({ msg: 'Passwords do not match' });
 	if (!passwordValid(password1)) errors.push({ msg: 'Password must contain at least one uppercase, one lowercase letter, only @ as special character, and be at least 4 characters.'});
 	if (errors.length > 0) {
-		return res.render('auth/reset', { title: 'Reset Password', email, errors });
+		return res.status(400).json({ errors });
 	}
 	try {
 		const user = await User.findOne({ email });
 		if (!user) {
-			req.flash('error', 'No account found');
-			return res.redirect('/auth/forgot');
+			return res.status(404).json({ error: 'No account found' });
 		}
 		if (!user.resetOtp || !user.resetOtpExpires || Date.now() > user.resetOtpExpires) {
-			req.flash('error', 'Reset code expired. Please request a new code.');
-			return res.redirect('/auth/forgot');
+			return res.status(410).json({ error: 'Reset code expired. Please request a new code.' });
 		}
 		if (user.resetOtp !== String(otp).trim()) {
-			req.flash('error', 'Invalid reset code');
-			return res.redirect(`/auth/reset?email=${encodeURIComponent(email)}`);
+			return res.status(400).json({ error: 'Invalid reset code' });
 		}
 		const salt = bcrypt.genSaltSync(10);
 		const hash = bcrypt.hashSync(password1, salt);
@@ -173,12 +126,10 @@ router.post('/auth/reset', middleware.ensureNotLoggedIn, async (req, res) => {
 		user.resetOtp = undefined;
 		user.resetOtpExpires = undefined;
 		await user.save();
-		req.flash('success', 'Password updated. You can now log in.');
-		return res.redirect('/auth/login');
+		return res.json({ ok: true, redirect: '/auth/login' });
 	} catch (err) {
 		console.error('Error resetting password:', err);
-		req.flash('error', 'Server error');
-		return res.redirect('/auth/forgot');
+		return res.status(500).json({ error: 'Server error' });
 	}
 });
 
@@ -186,11 +137,9 @@ router.post('/auth/reset', middleware.ensureNotLoggedIn, async (req, res) => {
 // Verify OTP routes
 router.get('/auth/verify', middleware.ensureNotLoggedIn, (req, res) => {
 	if (!req.session.pendingSignup) {
-		req.flash('warning', 'Please sign up first to verify your email.');
-		return res.redirect('/auth/signup');
+		return res.status(400).json({ error: 'Please sign up first to verify your email.' });
 	}
-	const email = req.session.pendingSignup.email;
-	res.render('auth/verify', { title: 'Verify Account', email });
+	return res.json({ email: req.session.pendingSignup.email });
 });
 
 router.post('/auth/verify', middleware.ensureNotLoggedIn, async (req, res) => {
@@ -198,28 +147,24 @@ router.post('/auth/verify', middleware.ensureNotLoggedIn, async (req, res) => {
 	try {
 		const pendingSignup = req.session.pendingSignup;
 		if (!pendingSignup) {
-			req.flash('warning', 'Signup session expired. Please sign up again.');
-			return res.redirect('/auth/signup');
+			return res.status(400).json({ error: 'Signup session expired. Please sign up again.' });
 		}
 
 		if (!pendingSignup.otp || !pendingSignup.otpExpires || Date.now() > pendingSignup.otpExpires) {
-			req.flash('error', 'OTP expired. Please resend OTP.');
-			return res.redirect('/auth/verify');
+			return res.status(410).json({ error: 'OTP expired. Please resend OTP.' });
 		}
 
 		if (pendingSignup.otp !== String(otp).trim()) {
-			req.flash('error', 'Invalid OTP.');
-			return res.redirect('/auth/verify');
+			return res.status(400).json({ error: 'Invalid OTP.' });
 		}
 
 		const existingUser = await User.findOne({ email: pendingSignup.email });
 		if (existingUser) {
 			delete req.session.pendingSignup;
-			req.flash('error', 'This email is already registered. Please log in.');
-			return res.redirect('/auth/login');
+			return res.status(409).json({ error: 'This email is already registered. Please log in.' });
 		}
 
-        const newUser = new User({
+		const newUser = new User({
 			firstName: pendingSignup.firstName,
 			lastName: pendingSignup.lastName,
 			email: pendingSignup.email,
@@ -230,7 +175,6 @@ router.post('/auth/verify', middleware.ensureNotLoggedIn, async (req, res) => {
 
 		await newUser.save();
 
-		// create an in-app notification for admins about the new user (non-blocking)
 		try {
 			await Notification.create({
 				message: `New user registered: ${newUser.firstName} ${newUser.lastName} (${newUser.role})`,
@@ -241,23 +185,14 @@ router.post('/auth/verify', middleware.ensureNotLoggedIn, async (req, res) => {
 			console.error('Could not create notification:', notifErr);
 		}
 
-		// remove pending signup from session
 		delete req.session.pendingSignup;
 
-		// automatically log the user in after verification
-		req.login(newUser, function(err) {
-			if (err) {
-				console.error('Login after verify failed:', err);
-				req.flash('success', 'Email verified. Please log in.');
-				return res.redirect('/auth/login');
-			}
-			req.flash('success', 'Email verified and logged in successfully.');
-			return res.redirect(req.session.returnTo || `/${newUser.role}/dashboard`);
-		});
+		const token = signToken(newUser);
+		setAuthCookie(res, token);
+		return res.json({ ok: true, redirect: `/${newUser.role}/dashboard` });
 	} catch (err) {
 		console.error('Error verifying OTP', err);
-		req.flash('error', 'Server error verifying OTP');
-		return res.redirect('/auth/signup');
+		return res.status(500).json({ error: 'Server error verifying OTP' });
 	}
 });
 
@@ -265,8 +200,7 @@ router.post('/auth/resend-otp', middleware.ensureNotLoggedIn, async (req, res) =
 	try {
 		const pendingSignup = req.session.pendingSignup;
 		if (!pendingSignup) {
-			req.flash('warning', 'Signup session expired. Please sign up again.');
-			return res.redirect('/auth/signup');
+			return res.status(400).json({ error: 'Signup session expired. Please sign up again.' });
 		}
 		const otp = generateOtp();
 		pendingSignup.otp = otp;
@@ -275,35 +209,47 @@ router.post('/auth/resend-otp', middleware.ensureNotLoggedIn, async (req, res) =
 
 		const sent = await sendOtpEmail(pendingSignup.email, otp);
 		if (!sent) {
-			req.flash('error', 'Could not send OTP email.');
-			return res.redirect('/auth/verify');
+			return res.status(500).json({ error: 'Could not send OTP email.' });
 		}
-		req.flash('success', 'A new verification code has been sent to your email.');
-		return res.redirect('/auth/verify');
+		return res.json({ ok: true, message: 'A new verification code has been sent to your email.' });
 	} catch (err) {
 		console.error('Error resending OTP', err);
-		req.flash('error', 'Server error resending OTP');
-		return res.redirect('/auth/signup');
+		return res.status(500).json({ error: 'Server error resending OTP' });
 	}
 });
 
-router.post("/auth/login", middleware.ensureNotLoggedIn,
-	passport.authenticate('local', {
-		failureRedirect: "/auth/login",
-		failureFlash: true,
-		successFlash: true
-	}), (req,res) => {
-		res.redirect(req.session.returnTo || `/${req.user.role}/dashboard`);
+router.post('/auth/login', middleware.ensureNotLoggedIn, async (req, res, next) => {
+	try {
+		const { email, password } = req.body;
+		if (!email || !password) {
+			return res.status(400).json({ error: 'Email and password are required.' });
+		}
+
+		const user = await User.findOne({ email });
+		if (!user) {
+			return res.status(401).json({ error: 'The email is not registered' });
+		}
+
+		if (user.isVerified === false) {
+			return res.status(401).json({ error: 'Please verify your email before logging in.' });
+		}
+
+		const isMatch = await bcrypt.compare(password, user.password);
+		if (!isMatch) {
+			return res.status(401).json({ error: 'Password incorrect' });
+		}
+
+		const token = signToken(user);
+		setAuthCookie(res, token);
+		return res.json({ ok: true, redirect: `/${user.role}/dashboard` });
+	} catch (err) {
+		next(err);
 	}
-);
+});
 
-
-router.get("/auth/logout", (req, res, next) => {
-	req.logout(function(err) {
-		if (err) { return next(err); }
-		req.flash("success", "Logged out successfully from FoodBridge");
-		res.redirect("/");
-	});
+router.post('/auth/logout', (req, res, next) => {
+	clearAuthCookie(res);
+	return res.json({ ok: true });
 });
 
 
@@ -323,11 +269,9 @@ router.post('/auth/unregister', middleware.ensureLoggedIn, async (req, res, next
 
 		await User.findByIdAndDelete(userId);
 
-		req.logout(function(err) {
-			if (err) return next(err);
-			req.flash('success', 'Your account has been unregistered successfully.');
-			return res.redirect('/');
-		});
+		clearAuthCookie(res);
+		req.flash('success', 'Your account has been unregistered successfully.');
+		return res.redirect('/');
 	} catch (err) {
 		console.error('Error unregistering user:', err);
 		req.flash('error', 'Could not unregister account.');
