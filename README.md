@@ -1,86 +1,152 @@
-# FoodConnect / FoodBridge
+FoodConnect
+FoodConnect is a full-stack food donation coordination platform that connects food donors, administrators, and collection agents. It supports the complete donation workflow from request submission and verification to agent assignment and pickup tracking.
 
-A simple food donation coordination system built with Node.js, Express, EJS, MongoDB and Passport. The app connects donors, admins and collection agents to manage donation requests, approvals, assignments, and collections.
+Features
+Authentication and authorization
+JWT-based authentication stored in an HTTP-only cookie
+Email OTP verification during signup
+OTP resend and password reset flows
+Role-based access control for donors, admins, and collection agents
+Protected dashboards and role-specific navigation
+Donor workflow
+Create food donation requests with food type, quantity, pickup time, address, phone number, and a message for the admin
+View pending and previous donations
+Track donation status
+Cancel eligible pending or rejected donations
+Manage profile information
+Admin workflow
+View dashboard statistics for donors, agents, and donations
+Review donation requests
+Accept or reject donation requests through the API workflow
+Assign collection agents to donations
+View registered collection agents
+Monitor pending, assigned, rejected, and collected donations
+Collection agent workflow
+View assigned pickup requests
+View collection history
+Mark an assigned donation as collected after pickup
+Use the route planner to visualize pickup locations
+Notifications
+MongoDB-backed role-based notifications
+Notifications for new donations, assignments, approvals, rejections, and completed collections
+Unread notification count
+Mark one or all notifications as read
+Frontend polling for updated notifications
+Maps and route planning
+OpenStreetMap tiles through Leaflet
+Address geocoding with Nominatim
+Pickup markers and route visualization
+Nearest-neighbor ordering for assigned pickup locations
+The current route planner visualizes and orders pickup locations. Turn-by-turn road routing and ETA calculation can be added with OSRM, Mapbox, or Google Directions API.
 
-## What is included
+FAQ assistant
+Role-aware FAQ responses for guests, donors, admins, and agents
+Built-in knowledge-base answers for common questions
+Hugging Face API integration for AI-generated answers
+Optional OpenAI fallback
+Response caching to reduce repeated API requests
+The Hugging Face model is configurable through environment variables. Qwen2.5-7B-Instruct can be used by setting HUGGINGFACE_MODEL accordingly.
 
-- User authentication with role-based login for `admin`, `agent`, and `donor`
-- Signup validation with strong password rules
-- Admin dashboard with donor, agent, and donation statistics
-- Donor dashboard with donation status and history
-- Agent dashboard with assigned collections and a route planner placeholder
-- Donation approval and assignment workflows
-- Simple and clean dashboard UI improvements with cards and action links
+Technology stack
+Frontend
+React 18
+Vite
+React Router
+Leaflet
+HTML and CSS
+Backend
+Node.js
+Express.js
+MongoDB
+Mongoose
+JWT
+Nodemailer
+bcryptjs
+Project structure
+backend/
+  app.js
+  config/
+  middleware/
+  models/
+  routes/
+  scripts/
+  services/
+  utils/
 
-## Current features
+frontend/
+  src/
+    components/
+    pages/
+    api.js
+    App.jsx
+    main.jsx
+    styles.css
+Installation
+1. Install backend dependencies
+cd backend
+npm install
+2. Install frontend dependencies
+cd ..\frontend
+npm install
+3. Configure environment variables
+Create backend/.env with the required values:
 
-### User roles
-- `admin`: manage donations, approve/reject requests, assign agents, view agent list
-- `agent`: collect assigned donations and view collection history
-- `donor`: submit donations and track pending / accepted requests
+MONGO_URI=your_mongodb_connection_string
+PORT=5001
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=7d
+SESSION_SECRET=your_session_secret
 
-### Authentication
-- Signup and login using email and password
-- Password validation requires uppercase, lowercase, digits, and only `@` as special character
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_USER=your_email
+EMAIL_PASS=your_email_password
+EMAIL_FROM=your_email
 
-### Dashboard improvements
-- Modern dashboard cards for admin/agent/donor views
-- Quick action buttons for important navigation
-- New placeholder route planner view for agents
+HUGGINGFACE_API_KEY=your_huggingface_token
+HUGGINGFACE_MODEL=Qwen/Qwen2.5-7B-Instruct
+HUGGINGFACE_API_URL=https://router.huggingface.co/v1/chat/completions
 
-## Setup and run
+OPENAI_API_KEY=optional_openai_key
+OPENAI_MODEL=gpt-4o-mini
+MongoDB and SMTP configuration are required for persistent data and email OTP verification. The FAQ assistant still provides local fallback answers when AI credentials are unavailable.
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/nishi885/FoodConnect.git
-   cd FoodConnect_nishi_clone/backend
-   ```
+4. Start the application
+Start the backend:
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+cd backend
+npm run dev
+Start the frontend in a second terminal:
 
-3. Create `backend/.env` with:
-   ```env
-   MONGO_URI=your_mongodb_connection_string
-   SESSION_SECRET=your_session_secret
-   NODE_ENV=development
-   PORT=3000
-   ```
+cd frontend
+npm run dev
+Open the frontend at http://localhost:5173. The backend runs at http://localhost:5001 by default.
 
-4. Run the app:
-   ```bash
-   npm run dev
-   ```
+Donation lifecycle
+Donor creates donation
+        ↓
+Admin reviews request
+        ↓
+Accepted or rejected
+        ↓
+Admin assigns collection agent
+        ↓
+Agent completes pickup
+        ↓
+Donation marked collected
+Supported donation statuses are pending, accepted, rejected, assigned, and collected.
 
-5. Open in browser:
-   ```
-   http://localhost:3000
-   ```
-
-## Backend structure
-
-- `backend/app.js` - main Express app setup
-- `backend/config/dbConnection.js` - MongoDB connection logic
-- `backend/config/passport.js` - Passport login configuration
-- `backend/models/` - Mongoose models for user and donation
-- `backend/routes/` - route handlers for auth, home, admin, donor, agent
-- `backend/views/` - EJS templates and dashboard pages
-- `assets/css/` - shared styles for dashboard and layout
-
-## Notes and future improvements
-
-The current codebase does not yet include OTP-based password recovery or a fully integrated AI shortest-route planner. These are planned enhancements:
-
-- `Password reset / OTP flow`
-  - add a `forgot password` page
-  - send email/SMS OTP, verify code, and set a new password
-
-- `AI / distance shortest-route feature`
-  - integrate Google Maps Directions API, Mapbox, or OSRM
-  - compute shortest path for agent pickup locations
-  - show route planner in the agent dashboard
-
-Built for quick demo use and easy future enhancement.
-
+API areas
+Authentication: /auth/*
+Session and dashboard data: /api/session, /api/dashboard
+Donations: /api/donations
+Agent management: /api/agents
+Profile updates: /api/profile
+Notifications: /notifications
+FAQ assistant: /api/faq
+Development notes
+Do not expose unrestricted admin self-registration in a production deployment.
+For production notifications, recipient-specific user targeting should be preferred over role-wide delivery.
+The current route planner is a visualization tool and is not a replacement for turn-by-turn navigation.
+License
+This project is intended for educational and portfolio use.
